@@ -1,0 +1,41 @@
+name: Extract URLs with Proxy and Student ID
+
+on:
+  workflow_dispatch:
+    inputs:
+      student_id:
+        description: '学生学号 (例如: 2024001)'
+        required: true
+        type: string
+      json_data:
+        description: '粘贴 JSON 数据（格式如 {"output": [{"download_url": "https://..."}]}）'
+        required: true
+        type: string
+        default: '{"output": []}'
+
+jobs:
+  extract:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Create Text directory
+        run: mkdir -p Text
+
+      - name: Run extraction script
+        id: extract
+        run: |
+          echo '${{ github.event.inputs.json_data }}' > input.json
+          python extract_urls.py input.json ${{ github.event.inputs.student_id }}
+
+      - name: Upload result as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: text-output
+          path: Text/
